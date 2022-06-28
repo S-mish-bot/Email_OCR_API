@@ -1,0 +1,20 @@
+# config/sidekiq.yml
+
+# :schedule:
+  # hello_world:
+  #   cron: '1/5 * * * * *'   # Runs once at every 0th second per minute
+  #   class: HelloWorld
+
+
+
+# :schedule:
+#   gmail_api:
+#     cron: '0 */2 * * * *'   # Runs once 2 minute
+#     class: GmailApi
+     
+
+:schedule:
+  ocr_api:
+    cron: '1/5 * * * * *'   # Runs once 5 secs
+    class: OcrApi
+     
