@@ -7,7 +7,7 @@ require 'zip'
 require 'aws-sdk-s3'
 
 
-require 'sidekiq-scheduler'
+# require 'sidekiq-scheduler'
 
 SERVICE = Google::Apis::GmailV1::GmailService.new
 SERVICE.client_options.application_name = 'InboxChecker'
@@ -23,8 +23,8 @@ SCOPE = Google::Apis::GmailV1::AUTH_GMAIL_MODIFY
 
 
 
-class GmailApi
-  include Sidekiq::Worker
+# class GmailApi
+#   include Sidekiq::Worker
 
   def authorize
       puts("inside authorize")
@@ -49,6 +49,7 @@ class GmailApi
 
   def read_email_attachments
     user_id = 'me'
+    
     SERVICE.list_user_labels(user_id).labels.each do |label|
       if label.name == 'UNREAD' then
         emails_received  = SERVICE.list_user_messages(user_id, q: GMAIL_QUERY)
@@ -58,16 +59,20 @@ class GmailApi
           msg_id = i.id
           email = SERVICE.get_user_message(user_id, msg_id)
           email.payload.parts.each.find do |part|
-            if(part.mime_type=='application/pdf')
-              attachment_id = part.body.attachment_id
-              email_attachment = SERVICE.get_user_message_attachment(user_id, msg_id, attachment_id)
-              file_name = "Invoice_#{Time.now.strftime('%Y%m%d%H%M%S%12N')}.pdf"
-              File.open(file_name, 'wb') {|f| f.puts (email_attachment.data)}
-              puts "File attached"
-            end
+       
+          if(part.mime_type=='application/pdf')
+            attachment_id = part.body.attachment_id
+       
+          email_message = SERVICE.get_user_message_attachment(user_id, msg_id, attachment_id)
+          file_name = "Invoice_#{Time.now.strftime('%Y%m%d%H%M%S%12N')}.pdf"
+          File.open(file_name, 'wb') {|f| f.puts (email_message.data)}
+          
+          puts "File attached"
           end
+        end
           SERVICE.modify_message(user_id, msg_id, body={ 'remove_label_ids': ['UNREAD']})
         end
+       
       end
     end
   end
@@ -108,21 +113,21 @@ class GmailApi
     end
   end
 
-  def middle1
+  # def middle1
     SERVICE.authorization = authorize
 
     puts "Fetching Attachments.."
     read_email_attachments
     puts "Before Run Me"
-    run_me
+    # run_me
     
-  end
+  # end
 
   # --- main program starts here
-  def perform
-    middle1
-    puts "After File Attached"
-  end
-end
+#   def perform
+#     middle1
+#     puts "After File Attached"
+#   end
+# end
 
 # result = `python3 app.py params`
